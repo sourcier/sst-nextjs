@@ -1,5 +1,9 @@
 import Image from 'next/image'
 import styles from './page.module.css'
+import crypto from "crypto";
+import { Bucket } from "sst/node/bucket";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 export default function Home() {
   return (
@@ -15,7 +19,7 @@ export default function Home() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            By{' '}
+            By{" "}
             <Image
               src="/vercel.svg"
               alt="Vercel Logo"
@@ -91,5 +95,19 @@ export default function Home() {
         </a>
       </div>
     </main>
-  )
+  );
+}
+
+export async function getServersideProps() {
+  const command = new PutObjectCommand({
+    ACL: "public-read",
+    Key: crypto.randomUUID(),
+    Bucket: Bucket.public.bucketName,
+  });
+
+  const url = await getSignedUrl(new S3Client({}), command);
+
+  return {
+    props: { url },
+  };
 }
